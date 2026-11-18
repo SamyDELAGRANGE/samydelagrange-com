@@ -83,7 +83,7 @@
     }
     var payload = {
       fields: fields.filter(function (f) { return f[1]; }).map(function (f) { return { objectTypeId: '0-1', name: f[0], value: f[1] }; }),
-      context: { pageUri: location.href.split('?')[0], pageName: document.title },
+      context: { pageUri: location.origin + location.pathname, pageName: document.title },
       legalConsentOptions: { consent: consent }
     };
     return fetch(HS.api + HS.portalId + '/' + guid, {
