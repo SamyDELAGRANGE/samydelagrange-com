@@ -408,14 +408,17 @@
     });
   }
 
-  /* Honoraires : deux modes, un seul à l'écran */
+  /* Honoraires : une offre à l'écran à la fois */
   var fees = $('[data-fees]');
   if (fees) {
     var seg = $('.seg', fees);
     var tabs = $$('[role="tab"]', fees);
     var feePanels = $$('[role="tabpanel"]', fees);
-    var amounts = [3000, 0];
+    var amounts = feePanels.map(function (panel) { return Number($('[data-count]', panel).getAttribute('data-count')); });
+    var currentFee = 0;
     var selectFee = function (index, byUser) {
+      var previous = currentFee;
+      currentFee = index;
       tabs.forEach(function (tab, i) {
         tab.setAttribute('aria-selected', String(i === index));
         tab.tabIndex = i === index ? 0 : -1;
@@ -425,13 +428,16 @@
       if (!byUser) return;
       void feePanels[index].offsetWidth;
       feePanels[index].classList.add('show');
-      roll($('[data-count]', feePanels[index]), amounts[index], amounts[1 - index], 900);
+      roll($('[data-count]', feePanels[index]), amounts[index], amounts[previous], 900);
       tabs[index].focus();
     };
     tabs.forEach(function (tab, i) {
       tab.addEventListener('click', function () { selectFee(i, true); });
       tab.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); selectFee(1 - i, true); }
+        var step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        selectFee((i + step + tabs.length) % tabs.length, true);
       });
     });
     selectFee(0, false);
@@ -440,7 +446,7 @@
       new IntersectionObserver(function (entries, io) {
         if (!entries[0].isIntersecting) return;
         io.disconnect();
-        roll(first, 3000, 0, 1400);
+        roll(first, amounts[0], 0, 1400);
       }, { threshold: 0.6 }).observe(first);
     }
   }
